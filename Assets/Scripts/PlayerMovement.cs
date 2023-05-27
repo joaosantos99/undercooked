@@ -50,14 +50,16 @@ public class PlayerMovement : NetworkBehaviour
     [ClientRpc]
     private void ClientConnectedClientRPC(int playerCount, ClientRpcParams clientRpcParams = default)
     {
+        if (!IsOwner) return;
+
         if(playerCount == 1)
         {
             transform.position = spawnOne;
-            camera.transform.position = new Vector3(0f, -0.2f, -10f);
+            camera.transform.position = new Vector3(0.49f, -2.92f, -10f);
         } else
         {
             transform.position = spawnTwo;
-            camera.transform.position = new Vector3(0f, 9.5f, -10f);
+            camera.transform.position = new Vector3(0.49f, 14.37f, -10f);
         }
     }
 
