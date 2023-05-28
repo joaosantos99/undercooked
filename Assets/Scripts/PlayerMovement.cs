@@ -9,7 +9,12 @@ public class PlayerMovement : NetworkBehaviour
 
     private float horizontal;
     private bool isFacingRight = true;
+    private bool hasItem = false;
+    private bool inBucketRange = false;
+    private bool bucketHasItem = false;
 
+    private GameObject Mush;
+    private GameObject Bucket;
     private Camera camera;
 
     [SerializeField] private float speed = 8f;
@@ -21,6 +26,8 @@ public class PlayerMovement : NetworkBehaviour
     void Start()
     {
         camera = Camera.main;
+        Mush = GameObject.FindGameObjectWithTag("Mush");
+        Bucket = GameObject.FindGameObjectWithTag("Bucket");
     }
 
     public override void OnNetworkSpawn()
@@ -79,12 +86,27 @@ public class PlayerMovement : NetworkBehaviour
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
         }
 
+        if(hasItem)
+        {
+            Mush.transform.position = transform.position;
+        }
+
+        if(inBucketRange || bucketHasItem)
+        {
+            Mush.transform.position = Bucket.transform.position;
+        }
+
         Flip();
     }
 
     private void FixedUpdate()
     {
         rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
+
+        if(!inBucketRange && bucketHasItem)
+        {
+            Bucket.transform.position = Vector2.MoveTowards(Bucket.transform.position, new Vector2(-11.04f, 10.58f), 6f * Time.deltaTime);
+        }
     }
 
     private bool IsGrounded()
@@ -94,12 +116,40 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Flip()
     {
-        if (isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f)
+        if (isFacingRight && horizontal > 0f || !isFacingRight && horizontal < 0f)
         {
             isFacingRight = !isFacingRight;
             Vector3 localScale = transform.localScale;
             localScale.x *= -1f;
             transform.localScale = localScale;
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Mush") && Input.GetKey(KeyCode.E))
+        {
+            hasItem = true;
+        }
+
+        if (collision.CompareTag("Bucket") && hasItem && Input.GetKey(KeyCode.E))
+        {
+            inBucketRange = true;
+            bucketHasItem = true;
+            hasItem = false;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Mush"))
+        {
+            hasItem = false;
+        }
+
+        if (collision.CompareTag("Bucket"))
+        {
+            inBucketRange = false;
         }
     }
 }
